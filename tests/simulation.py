@@ -16,9 +16,9 @@ class TestSimulation(unittest.TestCase):
             gamma=4.342e7, #Hz/T
             nuclear_spin=9/2,
             spin_factor=2,
-            powder_factor=1,
+            powder_factor=0.75,
             filling_factor=0.7,
-            T1=82.6e-5, #s
+            T1=83.5e-5, #s
             T2=396e-6, #s
             T2_star=50e-6, #s
         )
@@ -50,12 +50,16 @@ class TestSimulation(unittest.TestCase):
             power_amplifier_power=500,
             pulse = self.pulse,
             averages = 1,
-            gain = 6000
+            gain = 6000,
+            temperature=77,
         )
 
     def test_simulation(self):
         M = self.simulation.simulate()
 
         # Plotting the results
-        plt.plot(self.time_array, abs(M))
+        plt.plot(self.time_array * 1e6, abs(M))
+        plt.xlabel("Time (µs)")
+        plt.ylabel("Magnetization (a.u.)")
+        plt.title("FID of BiPh3")
         plt.show()

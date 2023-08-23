@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-from scipy import signal
+from scipy.constants import h, Boltzmann
 from .sample import Sample
 from .pulse import PulseArray
 
@@ -25,7 +25,8 @@ class Simulation:
         power_amplifier_power : float,
         pulse : PulseArray,
         averages: int,
-        gain: float
+        gain: float,
+        temperature: float
     ) -> None:
         """
         Constructs all the necessary attributes for the simulation object.
@@ -56,6 +57,8 @@ class Simulation:
                 The number of averages that are used for the simulation.
             gain:
                 The gain of the amplifier.
+            temperature:
+                The temperature of the sample in Kelvin.
             
         """
         self.sample = sample
@@ -70,9 +73,13 @@ class Simulation:
         self.pulse = pulse
         self.averages = averages
         self.gain = gain
+        self.temperature = temperature
 
     def simulate(self):
+        reference_voltage = self.calculate_reference_voltage()
+        logger.debug(reference_voltage * 1e6)
         B1 = self.calc_B1() * 1e3 # I think this is multiplied by 1e3 because everything is in mT
+        # B1 = 17.3 # Something might be wrong with the calculation of the B1 field. This has to be checked.
         self.sample.gamma = self.sample.gamma * 1e-6 # We need our gamma in MHz / T
         self.sample.T1 = self.sample.T1 * 1e3 # We need our T1 in ms
         self.sample.T2 = self.sample.T2 * 1e3 # We need our T2 in ms
@@ -82,8 +89,6 @@ class Simulation:
         real_pulsepower = self.pulse.get_real_pulsepower()
         imag_pulsepower = self.pulse.get_imag_pulsepower()
         M_sy1 = self.bloch_symmetric_strang_splitting(B1, xdis, real_pulsepower, imag_pulsepower)
-        logger.debug("Shape of Msy1: %s", M_sy1.shape)
-
 
         # Z-Component
         Mlong = np.squeeze(M_sy1[2,:,:])  # Indices start at 0 in Python
@@ -94,8 +99,8 @@ class Simulation:
         Mtrans = np.squeeze(M_sy1[0,:,:] + 1j*M_sy1[1,:,:])  # Indices start at 0 in Python
         Mtrans_avg = np.mean(Mtrans, axis=0)
         Mtrans_avg = np.delete(Mtrans_avg, -1)  # Remove the last element
-        reference = 4.5502
-        sigtrans = Mtrans_avg * reference * self.averages * self.gain
+        
+        sigtrans = Mtrans_avg * reference_voltage * 1e6 * self.averages * self.gain
         return sigtrans
 
 
@@ -108,6 +113,12 @@ class Simulation:
                 The B1 field of the solenoid coil.
             xdis : np.array
                 The x distribution of the isochromats.
+            real_pulsepower : np.array
+                The real part of the pulse power.
+            imag_pulsepower : np.array
+                The imaginary part of the pulse power.
+            relax : float
+                If relax = 1, the relaxation is taken into account. If relax = 0, the relaxation is not taken into account.
         """
         Nx = self.number_isochromats
         Nu = real_pulsepower.shape[0]
@@ -145,8 +156,6 @@ class Simulation:
         Mt = M0
         D = np.diag([np.exp(-1 / self.sample.T2 * relax * dt), np.exp(-1 / self.sample.T2 * relax * dt), np.exp(-1 / self.sample.T1 * relax * dt)])
         b = np.array([0, 0, self.initial_magnetization]) - np.array([0, 0, self.initial_magnetization * np.exp(-1 / self.sample.T1 * relax * dt)])
-
-        logger.debug(b)
 
         for n in range(Nu): # time loop
 
@@ -187,7 +196,6 @@ class Simulation:
         """
         # Df is the Full Width at Half Maximum (FWHM) of Lorentzian in Hz
         Df = 1 / np.pi / self.sample.T2_star
-        logger.debug("Df: %s", Df)
 
         # Randomly generating frequency offset using Cauchy distribution
         uu = np.random.rand(self.number_isochromats, 1) - 0.5
@@ -195,10 +203,26 @@ class Simulation:
 
         # xdis is a spatial function, but it is being repurposed here to convert through the gradient to a phase difference per time -> T2 dispersion of the isochromats
         xdis = np.linspace(-1, 1, self.number_isochromats) 
-        logger.debug(self.sample.gamma)
         xdis = (foffr.T * 1e-6) / (self.sample.gamma / 2 / np.pi) / (self.gradient * 1e-3) 
 
         return xdis
+    
+    def calculate_reference_voltage(self):
+        """This calculates the reference voltage of the measurement setup for the sample at a certain temperature.
+
+        Returns
+        -------
+            reference_voltage : float
+                The reference voltage of the measurement setup for the sample at a certain temperature in Volts.
+        """
+        u = 4 * np.pi * 1e-7 # permeability of free space
+
+        magnetization = self.sample.gamma * 2 * self.sample.atoms /  (2 * self.sample.nuclear_spin +1) * h**2 * self.sample.resonant_frequency/ Boltzmann / self.temperature * self.sample.spin_factor
+
+        coil_crossection = np.pi * (self.diameter_coil / 2) ** 2
+        reference_voltage = self.number_turns * coil_crossection * u * self.sample.gamma * 2 * self.sample.atoms /  (2 * self.sample.nuclear_spin +1) * h**2 * self.sample.resonant_frequency **2 / Boltzmann / self.temperature * self.sample.spin_factor
+        reference_voltage = reference_voltage * self.sample.powder_factor * self.sample.filling_factor
+        return reference_voltage
 
     @property
     def sample(self) -> Sample:
@@ -307,3 +331,12 @@ class Simulation:
     @gain.setter
     def gain(self, gain):
         self._gain = gain
+
+    @property
+    def temperature(self) -> float:
+        """Temperature of the sample."""
+        return self._temperature
+    
+    @temperature.setter
+    def temperature(self, temperature):
+        self._temperature = temperature
