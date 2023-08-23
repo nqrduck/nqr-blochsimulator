@@ -48,7 +48,9 @@ class TestSimulation(unittest.TestCase):
             diameter_coil=3e-3,
             number_turns=9,
             power_amplifier_power=500,
-            pulse = self.pulse
+            pulse = self.pulse,
+            averages = 1,
+            gain = 6000
         )
 
     def test_simulation(self):

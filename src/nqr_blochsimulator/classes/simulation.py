@@ -23,8 +23,10 @@ class Simulation:
         diameter_coil : float,
         number_turns    : float,
         power_amplifier_power : float,
-        pulse : PulseArray
-    ):
+        pulse : PulseArray,
+        averages: int,
+        gain: float
+    ) -> None:
         """
         Constructs all the necessary attributes for the simulation object.
 
@@ -48,8 +50,13 @@ class Simulation:
                 The number of turns of the coil.
             power_amplifier_power : float
                 The power of the power amplifier in Watts.
-            puslse: PulseArray
+            pulse: PulseArray
                 The pulse that is used for the simulation.
+            averages:
+                The number of averages that are used for the simulation.
+            gain:
+                The gain of the amplifier.
+            
         """
         self.sample = sample
         self.number_isochromats = number_isochromats
@@ -61,9 +68,15 @@ class Simulation:
         self.number_turns = number_turns
         self.power_amplifier_power = power_amplifier_power
         self.pulse = pulse
+        self.averages = averages
+        self.gain = gain
 
     def simulate(self):
-        B1 = self.calc_B1()
+        B1 = self.calc_B1() * 1e3 # I think this is multiplied by 1e3 because everything is in mT
+        self.sample.gamma = self.sample.gamma * 1e-6 # We need our gamma in MHz / T
+        self.sample.T1 = self.sample.T1 * 1e3 # We need our T1 in ms
+        self.sample.T2 = self.sample.T2 * 1e3 # We need our T2 in ms
+
         xdis = self.calc_xdis()
 
         real_pulsepower = self.pulse.get_real_pulsepower()
@@ -76,14 +89,13 @@ class Simulation:
         Mlong = np.squeeze(M_sy1[2,:,:])  # Indices start at 0 in Python
         Mlong_avg = np.mean(Mlong, axis=0)
         Mlong_avg = np.delete(Mlong_avg, -1)  # Remove the last element
-        siglong = np.abs(Mlong_avg)
 
         # XY-Component
         Mtrans = np.squeeze(M_sy1[0,:,:] + 1j*M_sy1[1,:,:])  # Indices start at 0 in Python
         Mtrans_avg = np.mean(Mtrans, axis=0)
         Mtrans_avg = np.delete(Mtrans_avg, -1)  # Remove the last element
         reference = 4.5502
-        sigtrans = Mtrans_avg * reference  
+        sigtrans = Mtrans_avg * reference * self.averages * self.gain
         return sigtrans
 
 
@@ -100,12 +112,12 @@ class Simulation:
         Nx = self.number_isochromats
         Nu = real_pulsepower.shape[0]
         M0 = np.array([np.zeros(Nx), np.zeros(Nx), np.ones(Nx)])
-        dt = self.pulse.dwell_time
+        dt = self.pulse.dwell_time * 1e3 # We need our dwell time in ms
 
         w = np.ones((Nu, 1))  * self.gradient
 
         # Bloch simulation in magnetization domain
-        gadt = self.sample.gamma * dt /2 * 1e-3
+        gadt = self.sample.gamma * dt /2
         B1 = np.tile((gadt * (real_pulsepower - 1j * imag_pulsepower) * B1).reshape(-1, 1), Nx)
         K = gadt * xdis * w * self.gradient
         phi = -np.sqrt(np.abs(B1) ** 2 + K ** 2)
@@ -134,6 +146,8 @@ class Simulation:
         D = np.diag([np.exp(-1 / self.sample.T2 * relax * dt), np.exp(-1 / self.sample.T2 * relax * dt), np.exp(-1 / self.sample.T1 * relax * dt)])
         b = np.array([0, 0, self.initial_magnetization]) - np.array([0, 0, self.initial_magnetization * np.exp(-1 / self.sample.T1 * relax * dt)])
 
+        logger.debug(b)
+
         for n in range(Nu): # time loop
 
             Mrot = np.zeros((3, Nx))
@@ -158,7 +172,7 @@ class Simulation:
         Returns
         -------
             B1 : float
-                The B1 field of the solenoid coil."""
+                The B1 field of the solenoid coil in T."""
 
         B1 = np.sqrt(2 * self.power_amplifier_power / 50) * np.pi * 4e-7 * self.number_turns / self.length_coil
         return B1
@@ -181,7 +195,9 @@ class Simulation:
 
         # xdis is a spatial function, but it is being repurposed here to convert through the gradient to a phase difference per time -> T2 dispersion of the isochromats
         xdis = np.linspace(-1, 1, self.number_isochromats) 
-        xdis = (foffr.T) / (self.sample.gamma / (2 * np.pi)) / (self.gradient * 1e-3) 
+        logger.debug(self.sample.gamma)
+        xdis = (foffr.T * 1e-6) / (self.sample.gamma / 2 / np.pi) / (self.gradient * 1e-3) 
+
         return xdis
 
     @property
@@ -273,3 +289,21 @@ class Simulation:
     @pulse.setter
     def pulse(self, pulse):
         self._pulse = pulse
+
+    @property
+    def averages(self) -> int:
+        """Number of averages that are used for the simulation."""
+        return self._averages
+    
+    @averages.setter
+    def averages(self, averages):
+        self._averages = averages
+
+    @property
+    def gain(self) -> float:
+        """Gain of the amplifier."""
+        return self._gain
+    
+    @gain.setter
+    def gain(self, gain):
+        self._gain = gain
