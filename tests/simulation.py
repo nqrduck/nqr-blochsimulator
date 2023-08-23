@@ -52,6 +52,8 @@ class TestSimulation(unittest.TestCase):
             averages = 1,
             gain = 6000,
             temperature=77,
+            loss_TX=12,
+            loss_RX=12
         )
 
     def test_simulation(self):

@@ -26,7 +26,10 @@ class Simulation:
         pulse : PulseArray,
         averages: int,
         gain: float,
-        temperature: float
+        temperature: float,
+        loss_TX: float = 0,
+        loss_RX: float = 0,
+
     ) -> None:
         """
         Constructs all the necessary attributes for the simulation object.
@@ -59,6 +62,10 @@ class Simulation:
                 The gain of the amplifier.
             temperature:
                 The temperature of the sample in Kelvin.
+            loss_TX:
+                The loss of the transmitter in dB.
+            loss_RX:
+                The loss of the receiver in dB.
             
         """
         self.sample = sample
@@ -74,20 +81,29 @@ class Simulation:
         self.averages = averages
         self.gain = gain
         self.temperature = temperature
+        self.loss_TX = loss_TX
+        self.loss_RX = loss_RX
 
     def simulate(self):
         reference_voltage = self.calculate_reference_voltage()
         logger.debug(reference_voltage * 1e6)
         B1 = self.calc_B1() * 1e3 # I think this is multiplied by 1e3 because everything is in mT
-        # B1 = 17.3 # Something might be wrong with the calculation of the B1 field. This has to be checked.
+        B1 = 17.3 # Something might be wrong with the calculation of the B1 field. This has to be checked.
         self.sample.gamma = self.sample.gamma * 1e-6 # We need our gamma in MHz / T
         self.sample.T1 = self.sample.T1 * 1e3 # We need our T1 in ms
         self.sample.T2 = self.sample.T2 * 1e3 # We need our T2 in ms
 
+        # Calculate the x distribution of the isochromats
         xdis = self.calc_xdis()
 
         real_pulsepower = self.pulse.get_real_pulsepower()
         imag_pulsepower = self.pulse.get_imag_pulsepower()
+
+        # Calculate losses on the pulse
+        real_pulsepower = real_pulsepower * (1 - 10 ** (-self.loss_TX / 20))
+        imag_pulsepower = imag_pulsepower * (1 - 10 ** (-self.loss_TX / 20))
+
+        # Calculate the magnetization
         M_sy1 = self.bloch_symmetric_strang_splitting(B1, xdis, real_pulsepower, imag_pulsepower)
 
         # Z-Component
@@ -100,8 +116,13 @@ class Simulation:
         Mtrans_avg = np.mean(Mtrans, axis=0)
         Mtrans_avg = np.delete(Mtrans_avg, -1)  # Remove the last element
         
-        sigtrans = Mtrans_avg * reference_voltage * 1e6 * self.averages * self.gain
-        return sigtrans
+        # Scale the signal according to the reference voltage, averages and gain
+        timedomain_signal = Mtrans_avg * reference_voltage * 1e6 * self.averages * self.gain
+
+        # Add the losses of the receiver - this should probably be done before the scaling
+        timedomain_signal = timedomain_signal * (1 - 10 ** (-self.loss_RX / 20))
+
+        return timedomain_signal
 
 
     def bloch_symmetric_strang_splitting(self, B1, xdis, real_pulsepower, imag_pulsepower, relax = 1):
