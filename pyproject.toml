@@ -27,4 +27,5 @@ dependencies = [
     "matplotlib",
     "numpy",
     "scipy",
+    "numpy",
 ]
