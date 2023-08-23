@@ -45,7 +45,7 @@ class Simulation:
             gradient : float
                 The gradient of the magnetic field in mt/M.
             noise : float
-                The RMS Noise of the measurement setup in Volts.
+                The RMS Noise of the measurement setup in µVolts.
             length_coil : float
                 The length of the coil in meters.
             diameter_coil : float
@@ -86,7 +86,7 @@ class Simulation:
 
     def simulate(self):
         reference_voltage = self.calculate_reference_voltage()
-        logger.debug(reference_voltage * 1e6)
+
         B1 = self.calc_B1() * 1e3 # I think this is multiplied by 1e3 because everything is in mT
         B1 = 17.3 # Something might be wrong with the calculation of the B1 field. This has to be checked.
         self.sample.gamma = self.sample.gamma * 1e-6 # We need our gamma in MHz / T
@@ -117,10 +117,15 @@ class Simulation:
         Mtrans_avg = np.delete(Mtrans_avg, -1)  # Remove the last element
         
         # Scale the signal according to the reference voltage, averages and gain
-        timedomain_signal = Mtrans_avg * reference_voltage * 1e6 * self.averages * self.gain
+        timedomain_signal = Mtrans_avg * reference_voltage * 1e6
 
         # Add the losses of the receiver - this should probably be done before the scaling
         timedomain_signal = timedomain_signal * (1 - 10 ** (-self.loss_RX / 20))
+
+        # Add noise to the signal
+        noise_data = self.calculate_noise(timedomain_signal)
+
+        timedomain_signal = timedomain_signal * self.averages * self.gain + noise_data
 
         return timedomain_signal
 
@@ -228,7 +233,7 @@ class Simulation:
 
         return xdis
     
-    def calculate_reference_voltage(self):
+    def calculate_reference_voltage(self) -> float:
         """This calculates the reference voltage of the measurement setup for the sample at a certain temperature.
 
         Returns
@@ -244,6 +249,23 @@ class Simulation:
         reference_voltage = self.number_turns * coil_crossection * u * self.sample.gamma * 2 * self.sample.atoms /  (2 * self.sample.nuclear_spin +1) * h**2 * self.sample.resonant_frequency **2 / Boltzmann / self.temperature * self.sample.spin_factor
         reference_voltage = reference_voltage * self.sample.powder_factor * self.sample.filling_factor
         return reference_voltage
+    
+    def calculate_noise(self, timedomain_signal : np.array) -> np.array:
+        """Calculates the noise array that is added to the signal.
+        
+        Parameters
+        ----------
+            timedomain_signal : np.array
+                The time domain signal that is used for the simulation.
+        
+        Returns
+        -------
+            noise_data : np.array
+                The noise array that is added to the signal."""
+        n_timedomain_points = timedomain_signal.shape[0]
+        noise_data = (self.noise * np.random.randn(self.averages, n_timedomain_points) + 1j * self.noise * np.random.randn(self.averages, n_timedomain_points))
+        noise_data = np.sum(noise_data, axis=0)  # Sum along the first axis
+        return noise_data
 
     @property
     def sample(self) -> Sample:

@@ -43,7 +43,7 @@ class TestSimulation(unittest.TestCase):
             number_isochromats=1000,
             initial_magnetization=1,
             gradient=1,
-            noise=0,
+            noise=2456.3,
             length_coil=6e-3,
             diameter_coil=3e-3,
             number_turns=9,
