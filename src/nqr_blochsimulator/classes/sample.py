@@ -24,6 +24,8 @@ class Sample:
         T2_star,
         atom_density=None,
         sample_volume=None,
+        sample_length=None,
+        sample_diameter=None
     ):
         """
         Constructs all the necessary attributes for the sample object.
@@ -58,6 +60,10 @@ class Sample:
                 The atom density of the sample (atoms per cm^3). By default None.
             sample_volume : float, optional
                 The volume of the sample (m^3). By default None.
+            sample_length : float, optional
+                The length of the sample (m). By default None.
+            sample_diameter : float, optional
+                The diameter of the sample (m). By default None.
         """
         self.name = name
         self.density = density
@@ -73,11 +79,14 @@ class Sample:
         self.T2_star = T2_star
         self.atom_density = atom_density
         self.sample_volume = sample_volume
+        self.sample_length = sample_length
+        self.sample_diameter = sample_diameter
         self.calculate_atoms()
 
     def calculate_atoms(self):
         """
-        Calculate the number of atoms in the sample per volume unit.
+        Calculate the number of atoms in the sample per volume unit. This only works if the sample volume and atom density are provided.
+        Also the sample should be cylindrical.
 
         If atom density and sample volume are provided, use these to calculate the number of atoms.
         If not, use Avogadro's number, density, and molar mass to calculate the number of atoms.
@@ -87,7 +96,7 @@ class Sample:
                 self.atom_density
                 * self.sample_volume
                 / 1e-6
-                / (self.sample_volume * 6 / 3)
+                / (self.sample_volume * self.sample_length / self.sample_diameter)
             )
         else:
             self.atoms = self.avogadro * self.density / self.molar_mass
