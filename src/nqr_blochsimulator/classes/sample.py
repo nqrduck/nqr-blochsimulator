@@ -25,7 +25,7 @@ class Sample:
         atom_density=None,
         sample_volume=None,
         sample_length=None,
-        sample_diameter=None
+        sample_diameter=None,
     ):
         """
         Constructs all the necessary attributes for the sample object.
