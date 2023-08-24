@@ -90,7 +90,7 @@ class Simulation:
         B1 = (
             self.calc_B1() * 1e3
         )  # I think this is multiplied by 1e3 because everything is in mT
-        B1 = 17.3  # Something might be wrong with the calculation of the B1 field. This has to be checked.
+        # B1 = 17.3  # Something might be wrong with the calculation of the B1 field. This has to be checked.
         self.sample.gamma = self.sample.gamma * 1e-6  # We need our gamma in MHz / T
         self.sample.T1 = self.sample.T1 * 1e3  # We need our T1 in ms
         self.sample.T2 = self.sample.T2 * 1e3  # We need our T2 in ms

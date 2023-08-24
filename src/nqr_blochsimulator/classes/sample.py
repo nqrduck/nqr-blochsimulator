@@ -39,9 +39,9 @@ class Sample:
             molar_mass : float
                 The molar mass of the sample (g/mol or kg/mol).
             resonant_frequency : float
-                The resonant frequency of the sample.
+                The resonant frequency of the sample in Hz.
             gamma : float
-                The gamma value of the sample.
+                The gamma value of the sample in Hz/T.
             nuclear_spin : float
                 The nuclear spin quantum number of the sample.
             spin_factor : float
@@ -51,11 +51,11 @@ class Sample:
             filling_factor : float
                 The filling factor of the sample.
             T1 : float
-                The spin-lattice relaxation time of the sample.
+                The spin-lattice relaxation time of the sample in seconds.
             T2 : float
-                The spin-spin relaxation time of the sample.
+                The spin-spin relaxation time of the sample in seconds.
             T2_star : float
-                The effective spin-spin relaxation time of the sample.
+                The effective spin-spin relaxation time of the sample in seconds.
             atom_density : float, optional
                 The atom density of the sample (atoms per cm^3). By default None.
             sample_volume : float, optional
