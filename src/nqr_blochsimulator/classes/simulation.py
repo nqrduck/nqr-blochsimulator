@@ -131,7 +131,7 @@ class Simulation:
         # Add noise to the signal
         noise_data = self.calculate_noise(timedomain_signal)
 
-        timedomain_signal = timedomain_signal * self.averages * self.gain + noise_data
+        timedomain_signal = timedomain_signal * self.averages * self.gain + noise_data * self.gain
 
         return timedomain_signal
 
