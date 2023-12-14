@@ -7,12 +7,12 @@ allow-direct-references = true
 
 [project]
 name = "nqr_blochsimulator"
-version = "0.0.1"
+version = "0.0.1a"
 authors = [
   { name="Julia Pfitzer", email="git@jupfi.me" },
 ]
 
-description = "Simple Python script to simulate NMR NQR Bloch equations"
+description = "Simple Python script to simulate NQR Bloch equations"
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.8"
