@@ -148,7 +148,7 @@ class Simulation:
         # print(abs(timedomain_signal))
 
         timedomain_signal = timedomain_signal
-        return timedomain_signal * self.conversion_factor * 1e-2
+        return timedomain_signal * self.conversion_factor
 
     def bloch_symmetric_strang_splitting(
         self, B1, xdis, real_pulsepower, imag_pulsepower, relax=1
