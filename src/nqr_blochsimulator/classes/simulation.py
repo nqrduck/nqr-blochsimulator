@@ -102,7 +102,6 @@ class Simulation:
         B1 = (
             self.calc_B1() * 1e3
         )  # I think this is multiplied by 1e3 because everything is in mT
-        print(B1)
         # B1 = 17.3  # Something might be wrong with the calculation of the B1 field. This has to be checked.
         self.sample.gamma = self.sample.gamma * 1e-6  # We need our gamma in MHz / T
         self.sample.T1 = self.sample.T1 * 1e3  # We need our T1 in ms
@@ -135,8 +134,9 @@ class Simulation:
         Mtrans_avg = np.mean(Mtrans, axis=0)
         Mtrans_avg = np.delete(Mtrans_avg, -1)  # Remove the last element
 
+
         # Scale the signal according to the reference voltage, averages and gain
-        timedomain_signal = Mtrans_avg * reference_voltage * self.conversion_factor
+        timedomain_signal = Mtrans_avg * reference_voltage
 
         # Add the losses of the receiver - this should probably be done before the scaling
         timedomain_signal = timedomain_signal * (1 - 10 ** (-self.loss_RX / 20))
@@ -144,9 +144,11 @@ class Simulation:
         # Add noise to the signal
         noise_data = self.calculate_noise(timedomain_signal)
 
-        timedomain_signal = timedomain_signal * self.averages * self.gain + noise_data * self.gain
+        timedomain_signal = (timedomain_signal * self.averages * self.gain) + (noise_data * self.gain)
+        # print(abs(timedomain_signal))
 
-        return timedomain_signal
+        timedomain_signal = timedomain_signal / self.averages
+        return timedomain_signal * self.conversion_factor
 
     def bloch_symmetric_strang_splitting(
         self, B1, xdis, real_pulsepower, imag_pulsepower, relax=1
@@ -298,36 +300,29 @@ class Simulation:
         u = 4 * np.pi * 1e-7  # permeability of free space
 
         magnetization = (
-            self.sample.gamma
+            ((self.sample.gamma
             * 2
-            * self.sample.atoms
-            / (2 * self.sample.nuclear_spin + 1)
-            * h**2
-            * self.sample.resonant_frequency
-            / Boltzmann
-            / self.temperature
+            * self.sample.atoms)
+            / (2 * self.sample.nuclear_spin + 1))
+            * (h**2
+            * self.sample.resonant_frequency * 2 * np.pi)
+            / (Boltzmann
+            * self.temperature)
             * self.sample.spin_factor
         )
 
         coil_crossection = np.pi * (self.diameter_coil / 2) ** 2
+
         reference_voltage = (
             self.number_turns
             * coil_crossection
             * u
-            * self.sample.gamma
-            * 2
-            * self.sample.atoms
-            / (2 * self.sample.nuclear_spin + 1)
-            * h**2
-            * self.sample.resonant_frequency**2
-            / Boltzmann
-            / self.temperature
-            * self.sample.spin_factor
+            * (self.sample.resonant_frequency * 2 * np.pi)
+            * magnetization
         )
         reference_voltage = (
             reference_voltage * self.sample.powder_factor * self.sample.filling_factor
         )
-
 
         # This is assumes thatour noise is dominated by everything after the resonator - this is not true for low Q probe coils
         reference_voltage = reference_voltage * np.sqrt(self.q_factor_receive)
@@ -347,9 +342,9 @@ class Simulation:
             noise_data : np.array
                 The noise array that is added to the signal."""
         n_timedomain_points = timedomain_signal.shape[0]
-        noise_data = self.noise * np.random.randn(
+        noise_data = self.noise * 1e-6 * np.random.randn(
             self.averages, n_timedomain_points
-        ) + 1j * self.noise * np.random.randn(self.averages, n_timedomain_points)
+        ) + 1j * self.noise * 1e-6 * np.random.randn(self.averages, n_timedomain_points)
         noise_data = np.sum(noise_data, axis=0)  # Sum along the first axis
         return noise_data
 

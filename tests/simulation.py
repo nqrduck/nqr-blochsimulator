@@ -44,20 +44,20 @@ class TestSimulation(unittest.TestCase):
             number_isochromats=1000,
             initial_magnetization=1,
             gradient=1,
-            noise=2,
+            noise=0.5,
             length_coil=6e-3,
             diameter_coil=3e-3,
             number_turns=9,
             q_factor_transmitt=100,
             q_factor_receive=100,
-            power_amplifier_power=500,
+            power_amplifier_power=110,
             pulse=self.pulse,
-            averages=1,
-            gain=6000,
-            temperature=77,
+            averages=1000,
+            gain=5600,
+            temperature=300,
             loss_TX=12,
             loss_RX=12,
-            conversion_factor=1622137.746 # This is for the LimeSDR based spectrometer
+            conversion_factor=2884 # This is for the LimeSDR based spectrometer
         )
 
     def test_simulation(self):
