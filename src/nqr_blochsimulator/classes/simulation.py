@@ -23,6 +23,8 @@ class Simulation:
         length_coil: float,
         diameter_coil: float,
         number_turns: float,
+        q_factor_transmitt:float,
+        q_factor_receive:float,
         power_amplifier_power: float,
         pulse: PulseArray,
         averages: int,
@@ -30,6 +32,7 @@ class Simulation:
         temperature: float,
         loss_TX: float = 0,
         loss_RX: float = 0,
+        conversion_factor: float = 1,
     ) -> None:
         """
         Constructs all the necessary attributes for the simulation object.
@@ -52,6 +55,10 @@ class Simulation:
                 The diameter of the coil in meters.
             number_turns : float
                 The number of turns of the coil.
+            q_factor_transmitt : float
+                The Q-factor of the transmitt path of the probe coil.
+            q_factor_receive : float
+                The Q-factor of the receive path of the probe coil.
             power_amplifier_power : float
                 The power of the power amplifier in Watts.
             pulse: PulseArray
@@ -66,6 +73,8 @@ class Simulation:
                 The loss of the transmitter in dB.
             loss_RX:
                 The loss of the receiver in dB.
+            conversion_factor:
+                The conversion factor of the receiver in spectromter units / Volt.
 
         """
         self.sample = sample
@@ -76,6 +85,8 @@ class Simulation:
         self.length_coil = length_coil
         self.diameter_coil = diameter_coil
         self.number_turns = number_turns
+        self.q_factor_transmitt = q_factor_transmitt
+        self.q_factor_receive = q_factor_receive
         self.power_amplifier_power = power_amplifier_power
         self.pulse = pulse
         self.averages = averages
@@ -83,6 +94,7 @@ class Simulation:
         self.temperature = temperature
         self.loss_TX = loss_TX
         self.loss_RX = loss_RX
+        self.conversion_factor = conversion_factor
 
     def simulate(self):
         reference_voltage = self.calculate_reference_voltage()
@@ -90,6 +102,7 @@ class Simulation:
         B1 = (
             self.calc_B1() * 1e3
         )  # I think this is multiplied by 1e3 because everything is in mT
+        print(B1)
         # B1 = 17.3  # Something might be wrong with the calculation of the B1 field. This has to be checked.
         self.sample.gamma = self.sample.gamma * 1e-6  # We need our gamma in MHz / T
         self.sample.T1 = self.sample.T1 * 1e3  # We need our T1 in ms
@@ -123,7 +136,7 @@ class Simulation:
         Mtrans_avg = np.delete(Mtrans_avg, -1)  # Remove the last element
 
         # Scale the signal according to the reference voltage, averages and gain
-        timedomain_signal = Mtrans_avg * reference_voltage * 1e6
+        timedomain_signal = Mtrans_avg * reference_voltage * self.conversion_factor
 
         # Add the losses of the receiver - this should probably be done before the scaling
         timedomain_signal = timedomain_signal * (1 - 10 ** (-self.loss_RX / 20))
@@ -244,6 +257,7 @@ class Simulation:
         B1 = (
             np.sqrt(2 * self.power_amplifier_power / 50)
             * np.pi
+            * np.sqrt(self.q_factor_transmitt)
             * 4e-7
             * self.number_turns
             / self.length_coil
@@ -313,6 +327,11 @@ class Simulation:
         reference_voltage = (
             reference_voltage * self.sample.powder_factor * self.sample.filling_factor
         )
+
+
+        # This is assumes thatour noise is dominated by everything after the resonator - this is not true for low Q probe coils
+        reference_voltage = reference_voltage * np.sqrt(self.q_factor_receive)
+
         return reference_voltage
 
     def calculate_noise(self, timedomain_signal: np.array) -> np.array:
@@ -405,6 +424,24 @@ class Simulation:
     @number_turns.setter
     def number_turns(self, number_turns):
         self._number_turns = number_turns
+
+    @property
+    def q_factor_transmitt(self) -> float:
+        """Q-factor of the transmitt path of the probe coil."""
+        return self._q_factor_transmitt
+    
+    @q_factor_transmitt.setter
+    def q_factor_transmitt(self, q_factor_transmitt):   
+        self._q_factor_transmitt = q_factor_transmitt
+
+    @property
+    def q_factor_receive(self) -> float:
+        """Q-factor of the receive path of the probe coil."""
+        return self._q_factor_receive
+    
+    @q_factor_receive.setter
+    def q_factor_receive(self, q_factor_receive):
+        self._q_factor_receive = q_factor_receive
 
     @property
     def power_amplifier_power(self) -> float:
