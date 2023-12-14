@@ -147,7 +147,7 @@ class Simulation:
         timedomain_signal = (timedomain_signal * self.averages * self.gain) + (noise_data * self.gain)
         # print(abs(timedomain_signal))
 
-        timedomain_signal = timedomain_signal / self.averages
+        timedomain_signal = timedomain_signal
         return timedomain_signal * self.conversion_factor
 
     def bloch_symmetric_strang_splitting(
