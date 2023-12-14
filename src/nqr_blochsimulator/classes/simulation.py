@@ -305,7 +305,7 @@ class Simulation:
             * self.sample.atoms)
             / (2 * self.sample.nuclear_spin + 1))
             * (h**2
-            * self.sample.resonant_frequency * 2 * np.pi)
+            * self.sample.resonant_frequency)
             / (Boltzmann
             * self.temperature)
             * self.sample.spin_factor
@@ -317,14 +317,14 @@ class Simulation:
             self.number_turns
             * coil_crossection
             * u
-            * (self.sample.resonant_frequency * 2 * np.pi)
+            * (self.sample.resonant_frequency)
             * magnetization
         )
         reference_voltage = (
             reference_voltage * self.sample.powder_factor * self.sample.filling_factor
         )
 
-        # This is assumes thatour noise is dominated by everything after the resonator - this is not true for low Q probe coils
+        # This is assumes that our noise is dominated by everything after the resonator - this is not true for low Q probe coils
         reference_voltage = reference_voltage * np.sqrt(self.q_factor_receive)
 
         return reference_voltage
