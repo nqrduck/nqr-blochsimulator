@@ -129,7 +129,7 @@ class Simulation:
 
         # XY-Component
         Mtrans = np.squeeze(
-            M_sy1[0, :, :] + 1j * M_sy1[1, :, :]
+            M_sy1[1, :, :] + 1j * M_sy1[0, :, :]
         )  # Indices start at 0 in Python
         Mtrans_avg = np.mean(Mtrans, axis=0)
         Mtrans_avg = np.delete(Mtrans_avg, -1)  # Remove the last element
@@ -180,6 +180,7 @@ class Simulation:
         B1 = np.tile(
             (gadt * (real_pulsepower - 1j * imag_pulsepower) * B1).reshape(-1, 1), Nx
         )
+
         K = gadt * xdis * w * self.gradient
         phi = -np.sqrt(np.abs(B1) ** 2 + K**2)
 
@@ -222,25 +223,25 @@ class Simulation:
         for n in range(Nu):  # time loop
             Mrot = np.zeros((3, Nx))
             Mrot[0, :] = (
-                Bd1.T[:, n] * Mt[0, :] + Bd2.T[:, n] * Mt[1, :] + Bd3.T[:, n] * Mt[2, :]
+                Bd1.conj().T[:, n] * Mt[0, :] + Bd2.conj().T[:, n] * Mt[1, :] + Bd3.conj().T[:, n] * Mt[2, :]
             )
             Mrot[1, :] = (
-                Bd4.T[:, n] * Mt[0, :] + Bd5.T[:, n] * Mt[1, :] + Bd6.T[:, n] * Mt[2, :]
+                Bd4.conj().T[:, n] * Mt[0, :] + Bd5.conj().T[:, n] * Mt[1, :] + Bd6.conj().T[:, n] * Mt[2, :]
             )
             Mrot[2, :] = (
-                Bd7.T[:, n] * Mt[0, :] + Bd8.T[:, n] * Mt[1, :] + Bd9.T[:, n] * Mt[2, :]
+                Bd7.conj().T[:, n] * Mt[0, :] + Bd8.conj().T[:, n] * Mt[1, :] + Bd9.conj().T[:, n] * Mt[2, :]
             )
 
             Mt = np.dot(D, Mrot) + np.tile(b, (Nx, 1)).T
 
             Mrot[0, :] = (
-                Bd1.T[:, n] * Mt[0, :] + Bd2.T[:, n] * Mt[1, :] + Bd3.T[:, n] * Mt[2, :]
+                Bd1.conj().T[:, n] * Mt[0, :] + Bd2.conj().T[:, n] * Mt[1, :] + Bd3.conj().T[:, n] * Mt[2, :]
             )
             Mrot[1, :] = (
-                Bd4.T[:, n] * Mt[0, :] + Bd5.T[:, n] * Mt[1, :] + Bd6.T[:, n] * Mt[2, :]
+                Bd4.conj().T[:, n] * Mt[0, :] + Bd5.conj().T[:, n] * Mt[1, :] + Bd6.conj().T[:, n] * Mt[2, :]
             )
             Mrot[2, :] = (
-                Bd7.T[:, n] * Mt[0, :] + Bd8.T[:, n] * Mt[1, :] + Bd9.T[:, n] * Mt[2, :]
+                Bd7.conj().T[:, n] * Mt[0, :] + Bd8.conj().T[:, n] * Mt[1, :] + Bd9.conj().T[:, n] * Mt[2, :]
             )
 
             Mt = Mrot
