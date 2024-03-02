@@ -48,7 +48,7 @@ class TestSimulation(unittest.TestCase):
             length_coil=6e-3,
             diameter_coil=3e-3,
             number_turns=9,
-            q_factor_transmitt=100,
+            q_factor_transmit=100,
             q_factor_receive=100,
             power_amplifier_power=110,
             pulse=self.pulse,

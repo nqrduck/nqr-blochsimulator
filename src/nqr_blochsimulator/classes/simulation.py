@@ -55,8 +55,8 @@ class Simulation:
                 The diameter of the coil in meters.
             number_turns : float
                 The number of turns of the coil.
-            q_factor_transmitt : float
-                The Q-factor of the transmitt path of the probe coil.
+            q_factor_transmit : float
+                The Q-factor of the transmit path of the probe coil.
             q_factor_receive : float
                 The Q-factor of the receive path of the probe coil.
             power_amplifier_power : float
@@ -85,7 +85,7 @@ class Simulation:
         self.length_coil = length_coil
         self.diameter_coil = diameter_coil
         self.number_turns = number_turns
-        self.q_factor_transmitt = q_factor_transmitt
+        self.q_factor_transmit = q_factor_transmit
         self.q_factor_receive = q_factor_receive
         self.power_amplifier_power = power_amplifier_power
         self.pulse = pulse
@@ -422,13 +422,13 @@ class Simulation:
         self._number_turns = number_turns
 
     @property
-    def q_factor_transmitt(self) -> float:
-        """Q-factor of the transmitt path of the probe coil."""
-        return self._q_factor_transmitt
+    def q_factor_transmtt(self) -> float:
+        """Q-factor of the transmit path of the probe coil."""
+        return self._q_factor_transmit
     
-    @q_factor_transmitt.setter
-    def q_factor_transmitt(self, q_factor_transmitt):   
-        self._q_factor_transmitt = q_factor_transmitt
+    @q_factor_transmit.setter
+    def q_factor_transmit(self, q_factor_transmit):   
+        self._q_factor_transmit = q_factor_transmit
 
     @property
     def q_factor_receive(self) -> float:
