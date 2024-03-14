@@ -23,7 +23,7 @@ class Simulation:
         length_coil: float,
         diameter_coil: float,
         number_turns: float,
-        q_factor_transmitt:float,
+        q_factor_transmit:float,
         q_factor_receive:float,
         power_amplifier_power: float,
         pulse: PulseArray,
@@ -260,7 +260,7 @@ class Simulation:
         B1 = (
             np.sqrt(2 * self.power_amplifier_power / 50)
             * np.pi
-            * np.sqrt(self.q_factor_transmitt)
+            * np.sqrt(self.q_factor_transmit)
             * 4e-7
             * self.number_turns
             / self.length_coil
@@ -422,7 +422,7 @@ class Simulation:
         self._number_turns = number_turns
 
     @property
-    def q_factor_transmtt(self) -> float:
+    def q_factor_transmit(self) -> float:
         """Q-factor of the transmit path of the probe coil."""
         return self._q_factor_transmit
     
