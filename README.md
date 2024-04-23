@@ -19,6 +19,12 @@ To install the package, run the following command in the root directory of the p
 pip install .
 ```
 
+Alternatively you can install the package via PyPI:
+
+```
+pip install nqr-blochsimulator
+```
+
 The package can then be tested by running
 
 ```

@@ -7,15 +7,15 @@ allow-direct-references = true
 
 [project]
 name = "nqr_blochsimulator"
-version = "0.0.1a"
+version = "0.0.2"
 authors = [
-  { name="Julia Pfitzer", email="git@jupfi.me" },
+  { name="jupfi", email="support@nqrduck.cool" },
 ]
 
 description = "Simple Python script to simulate NQR Bloch equations"
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -29,3 +29,28 @@ dependencies = [
     "scipy",
     "numpy",
 ]
+
+[tool.ruff]
+exclude = [
+  "widget.py",
+]
+
+[tool.ruff.lint]
+extend-select = [
+  "UP",  # pyupgrade
+  "D",   # pydocstyle
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[project.urls]
+"Homepage" = "https://nqrduck.cool"
+"Bug Tracker" = "https://github.com/nqrduck/nqr-blochsimulator/issues"
+"Source Code" = "https://github.com/nqrduck/nqrduck-blochsimulator"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nqr_blochsimulator"]
