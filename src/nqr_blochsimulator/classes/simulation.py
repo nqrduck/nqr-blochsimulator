@@ -23,8 +23,8 @@ class Simulation:
         length_coil: float,
         diameter_coil: float,
         number_turns: float,
-        q_factor_transmit:float,
-        q_factor_receive:float,
+        q_factor_transmit: float,
+        q_factor_receive: float,
         power_amplifier_power: float,
         pulse: PulseArray,
         averages: int,
@@ -82,8 +82,8 @@ class Simulation:
         self.initial_magnetization = initial_magnetization
         self.gradient = gradient
         self.noise = noise
-        self.length_coil = length_coil
-        self.diameter_coil = diameter_coil
+        self.length_coil = length_coil * 1e-3  # We need our length in meters
+        self.diameter_coil = diameter_coil * 1e-3  # We need our diameter in meters
         self.number_turns = number_turns
         self.q_factor_transmit = q_factor_transmit
         self.q_factor_receive = q_factor_receive
@@ -134,7 +134,6 @@ class Simulation:
         Mtrans_avg = np.mean(Mtrans, axis=0)
         Mtrans_avg = np.delete(Mtrans_avg, -1)  # Remove the last element
 
-
         # Scale the signal according to the reference voltage, averages and gain
         timedomain_signal = Mtrans_avg * reference_voltage
 
@@ -144,7 +143,9 @@ class Simulation:
         # Add noise to the signal
         noise_data = self.calculate_noise(timedomain_signal)
 
-        timedomain_signal = (timedomain_signal * self.averages * self.gain) + (noise_data * self.gain)
+        timedomain_signal = (timedomain_signal * self.averages * self.gain) + (
+            noise_data * self.gain
+        )
         # print(abs(timedomain_signal))
 
         timedomain_signal = timedomain_signal
@@ -223,25 +224,37 @@ class Simulation:
         for n in range(Nu):  # time loop
             Mrot = np.zeros((3, Nx))
             Mrot[0, :] = (
-                Bd1.conj().T[:, n] * Mt[0, :] + Bd2.conj().T[:, n] * Mt[1, :] + Bd3.conj().T[:, n] * Mt[2, :]
+                Bd1.conj().T[:, n] * Mt[0, :]
+                + Bd2.conj().T[:, n] * Mt[1, :]
+                + Bd3.conj().T[:, n] * Mt[2, :]
             )
             Mrot[1, :] = (
-                Bd4.conj().T[:, n] * Mt[0, :] + Bd5.conj().T[:, n] * Mt[1, :] + Bd6.conj().T[:, n] * Mt[2, :]
+                Bd4.conj().T[:, n] * Mt[0, :]
+                + Bd5.conj().T[:, n] * Mt[1, :]
+                + Bd6.conj().T[:, n] * Mt[2, :]
             )
             Mrot[2, :] = (
-                Bd7.conj().T[:, n] * Mt[0, :] + Bd8.conj().T[:, n] * Mt[1, :] + Bd9.conj().T[:, n] * Mt[2, :]
+                Bd7.conj().T[:, n] * Mt[0, :]
+                + Bd8.conj().T[:, n] * Mt[1, :]
+                + Bd9.conj().T[:, n] * Mt[2, :]
             )
 
             Mt = np.dot(D, Mrot) + np.tile(b, (Nx, 1)).T
 
             Mrot[0, :] = (
-                Bd1.conj().T[:, n] * Mt[0, :] + Bd2.conj().T[:, n] * Mt[1, :] + Bd3.conj().T[:, n] * Mt[2, :]
+                Bd1.conj().T[:, n] * Mt[0, :]
+                + Bd2.conj().T[:, n] * Mt[1, :]
+                + Bd3.conj().T[:, n] * Mt[2, :]
             )
             Mrot[1, :] = (
-                Bd4.conj().T[:, n] * Mt[0, :] + Bd5.conj().T[:, n] * Mt[1, :] + Bd6.conj().T[:, n] * Mt[2, :]
+                Bd4.conj().T[:, n] * Mt[0, :]
+                + Bd5.conj().T[:, n] * Mt[1, :]
+                + Bd6.conj().T[:, n] * Mt[2, :]
             )
             Mrot[2, :] = (
-                Bd7.conj().T[:, n] * Mt[0, :] + Bd8.conj().T[:, n] * Mt[1, :] + Bd9.conj().T[:, n] * Mt[2, :]
+                Bd7.conj().T[:, n] * Mt[0, :]
+                + Bd8.conj().T[:, n] * Mt[1, :]
+                + Bd9.conj().T[:, n] * Mt[2, :]
             )
 
             Mt = Mrot
@@ -301,14 +314,12 @@ class Simulation:
         u = 4 * np.pi * 1e-7  # permeability of free space
 
         magnetization = (
-            ((self.sample.gamma
-            * 2
-            * self.sample.atoms)
-            / (2 * self.sample.nuclear_spin + 1))
-            * (h**2
-            * self.sample.resonant_frequency)
-            / (Boltzmann
-            * self.temperature)
+            (
+                (self.sample.gamma * 2 * self.sample.atoms)
+                / (2 * self.sample.nuclear_spin + 1)
+            )
+            * (h**2 * self.sample.resonant_frequency)
+            / (Boltzmann * self.temperature)
             * self.sample.spin_factor
         )
 
@@ -425,16 +436,16 @@ class Simulation:
     def q_factor_transmit(self) -> float:
         """Q-factor of the transmit path of the probe coil."""
         return self._q_factor_transmit
-    
+
     @q_factor_transmit.setter
-    def q_factor_transmit(self, q_factor_transmit):   
+    def q_factor_transmit(self, q_factor_transmit):
         self._q_factor_transmit = q_factor_transmit
 
     @property
     def q_factor_receive(self) -> float:
         """Q-factor of the receive path of the probe coil."""
         return self._q_factor_receive
-    
+
     @q_factor_receive.setter
     def q_factor_receive(self, q_factor_receive):
         self._q_factor_receive = q_factor_receive

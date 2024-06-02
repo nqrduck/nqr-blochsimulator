@@ -39,9 +39,9 @@ class Sample:
             molar_mass : float
                 The molar mass of the sample (g/mol or kg/mol).
             resonant_frequency : float
-                The resonant frequency of the sample in Hz.
+                The resonant frequency of the sample in MHz.
             gamma : float
-                The gamma value of the sample in Hz/T.
+                The gamma value of the sample in MHz/T.
             nuclear_spin : float
                 The nuclear spin quantum number of the sample.
             spin_factor : float
@@ -51,32 +51,32 @@ class Sample:
             filling_factor : float
                 The filling factor of the sample.
             T1 : float
-                The spin-lattice relaxation time of the sample in seconds.
+                The spin-lattice relaxation time of the sample in microseconds.
             T2 : float
-                The spin-spin relaxation time of the sample in seconds.
+                The spin-spin relaxation time of the sample in microseconds.
             T2_star : float
-                The effective spin-spin relaxation time of the sample in seconds.
+                The effective spin-spin relaxation time of the sample in microseconds.
             atom_density : float, optional
                 The atom density of the sample (atoms per cm^3). By default None.
             sample_volume : float, optional
                 The volume of the sample (m^3). By default None.
             sample_length : float, optional
-                The length of the sample (m). By default None.
+                The length of the sample (mm). By default None.
             sample_diameter : float, optional
-                The diameter of the sample (m). By default None.
+                The diameter of the sample m(m). By default None.
         """
         self.name = name
         self.density = density
         self.molar_mass = molar_mass
-        self.resonant_frequency = resonant_frequency
-        self.gamma = gamma
+        self.resonant_frequency = resonant_frequency * 1e6
+        self.gamma = gamma * 1e6
         self.nuclear_spin = nuclear_spin
         self.spin_factor = spin_factor
         self.powder_factor = powder_factor
         self.filling_factor = filling_factor
-        self.T1 = T1
-        self.T2 = T2
-        self.T2_star = T2_star
+        self.T1 = T1 * 1e-6
+        self.T2 = T2 * 1e-6
+        self.T2_star = T2_star * 1e-6
         self.atom_density = atom_density
         self.sample_volume = sample_volume
         self.sample_length = sample_length
