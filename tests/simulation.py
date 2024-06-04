@@ -1,10 +1,13 @@
 import unittest
 import numpy as np
+import logging
 import matplotlib.pyplot as plt
 from nqr_blochsimulator.classes.sample import Sample
 from nqr_blochsimulator.classes.simulation import Simulation
 from nqr_blochsimulator.classes.pulse import PulseArray
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 class TestSimulation(unittest.TestCase):
     def setUp(self):
@@ -13,14 +16,14 @@ class TestSimulation(unittest.TestCase):
             density=1.585e6,  # g/m^3
             molar_mass=440.3,  # g/mol
             resonant_frequency=83.56e6,  # Hz
-            gamma=4.342e7,  # Hz/T
-            nuclear_spin=9 / 2,
-            spin_factor=2,
+            gamma=43.42,  # MHz/T
+            nuclear_spin= 7 / 2,
+            spin_transition=2,
             powder_factor=0.75,
             filling_factor=0.7,
-            T1=83.5e-5,  # s
-            T2=396e-6,  # s
-            T2_star=50e-6,  # s
+            T1=83.5,  # µs
+            T2=396,  # µs
+            T2_star=50,  # µs
         )
 
         simulation_length = 300e-6
@@ -45,8 +48,8 @@ class TestSimulation(unittest.TestCase):
             initial_magnetization=1,
             gradient=1,
             noise=0.5,
-            length_coil=6e-3,
-            diameter_coil=3e-3,
+            length_coil=6,  # mm
+            diameter_coil=3,  # mm
             number_turns=9,
             q_factor_transmit=100,
             q_factor_receive=100,
@@ -57,7 +60,7 @@ class TestSimulation(unittest.TestCase):
             temperature=300,
             loss_TX=12,
             loss_RX=12,
-            conversion_factor=2884 # This is for the LimeSDR based spectrometer
+            conversion_factor=2884,  # This is for the LimeSDR based spectrometer
         )
 
     def test_simulation(self):
@@ -69,3 +72,15 @@ class TestSimulation(unittest.TestCase):
         plt.ylabel("Magnetization (a.u.)")
         plt.title("FID of BiPh3")
         plt.show()
+
+    def test_spin_factor_calculation(self):
+
+        spin = self.sample.nuclear_spin
+        transition = self.sample.spin_transition
+
+        spin_factor = self.sample.calculate_spin_transition_factor(spin, transition)
+        logger.info("Spin factor: " + str(spin_factor))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,5 +1,7 @@
-from math import pi, sqrt
+import logging
+import numpy as np
 
+logger = logging.getLogger(__name__)
 
 class Sample:
     """
@@ -10,18 +12,18 @@ class Sample:
 
     def __init__(
         self,
-        name,
-        density,
-        molar_mass,
-        resonant_frequency,
-        gamma,
-        nuclear_spin,
-        spin_factor,
-        powder_factor,
-        filling_factor,
-        T1,
-        T2,
-        T2_star,
+        name : str,
+        density : float,
+        molar_mass : float,
+        resonant_frequency : float,
+        gamma : float,
+        nuclear_spin : float,
+        spin_transition : int,
+        powder_factor : float,
+        filling_factor : float,
+        T1 : float,
+        T2 : float,
+        T2_star : float,
         atom_density=None,
         sample_volume=None,
         sample_length=None,
@@ -44,8 +46,13 @@ class Sample:
                 The gamma value of the sample in MHz/T.
             nuclear_spin : float
                 The nuclear spin quantum number of the sample.
-            spin_factor : float
-                The spin factor of the sample.
+            spin_transition: int
+                The spin transition of the sample.
+                0 is -1/2 -> 1/2
+                1 is 1/2 -> 3/2
+                2 is 3/2 -> 5/2
+                3 is 5/2 -> 7/2
+                4 is 7/2 -> 9/2
             powder_factor : float
                 The powder factor of the sample.
             filling_factor : float
@@ -71,7 +78,8 @@ class Sample:
         self.resonant_frequency = resonant_frequency * 1e6
         self.gamma = gamma * 1e6
         self.nuclear_spin = nuclear_spin
-        self.spin_factor = spin_factor
+        self.spin_transition = spin_transition
+        self.spin_factor = self.calculate_spin_transition_factor(nuclear_spin, self.spin_transition)
         self.powder_factor = powder_factor
         self.filling_factor = filling_factor
         self.T1 = T1 * 1e-6
@@ -100,3 +108,69 @@ class Sample:
             )
         else:
             self.atoms = self.avogadro * self.density / self.molar_mass
+
+    def pauli_spin_matrices(self, spin):
+        """
+        Generate the spin matrices for a given spin value.
+
+        Parameters:
+        spin (float): The spin value, which can be a half-integer or integer.
+
+        Returns:
+        tuple: A tuple containing the following elements:
+            Jx (np.ndarray): The x-component of the spin matrix.
+            Jy (np.ndarray): The y-component of the spin matrix.
+            Jz (np.ndarray): The z-component of the spin matrix.
+            J_minus (np.ndarray): The lowering operator matrix.
+            J_plus (np.ndarray): The raising operator matrix.
+            m (np.ndarray): The array of magnetic quantum numbers.
+        """
+
+        m = np.arange(spin, -spin-1, -1)
+        paulirowlength = int(spin * 2 + 1)
+
+        pauli_z = np.diag(m)
+        pauli_plus = np.zeros((paulirowlength, paulirowlength))
+        pauli_minus = np.zeros((paulirowlength, paulirowlength))
+
+        for row_index in range(paulirowlength - 1):
+            col_index = row_index + 1
+            pauli_plus[row_index, col_index] = np.sqrt(spin * (spin + 1) - m[col_index] * (m[col_index] + 1))
+
+        for row_index in range(1, paulirowlength):
+            col_index = row_index - 1
+            pauli_minus[row_index, col_index] = np.sqrt(spin * (spin + 1) - m[col_index] * (m[col_index] - 1))
+
+        Jx = 0.5 * (pauli_plus + pauli_minus)
+        Jy = -0.5j * (pauli_plus - pauli_minus)
+        Jz = pauli_z
+
+        return Jx, Jy, Jz, pauli_minus, pauli_plus, m
+        
+    def calculate_spin_transition_factor(self, I, transition):
+        """
+        Calculate the prefactor for the envisaged spin transition for a given nuclear spin.
+
+        Parameters:
+        I (float): The nuclear spin value, which can be a half-integer or integer.
+        transition (int): The index of the transition.
+                        The transition indices represent the shifts between magnetic quantum numbers m:
+                        - 0 represents -1/2 --> 1/2 
+                        - 1 represents 1/2 --> 3/2 
+                        - 2 represents 3/2 --> 5/2 
+                        (only valid transitions based on spin value I are allowed)
+
+        Returns:
+        float: The prefactor for the envisaged spin transition.
+        """
+        m_values = np.arange(I, -I-1, -1)
+        if transition < 0 or transition >= len(m_values) - 1:
+            raise ValueError(f"Invalid transition for spin {I}. Valid range is 0 to {len(m_values) - 2}")
+
+        Jx, Jy, Jz, J_minus, J_plus, m = self.pauli_spin_matrices(I)
+        trindex = int(len(Jx) / 2 - transition)
+        spinfactor = Jx[trindex - 1, trindex]
+
+        logger.debug(f"Spin transition factor for I={I}, transition={transition}: {np.real(spinfactor)}")
+        logger.info(f"Jx is {Jx}")
+        return np.real(spinfactor)
