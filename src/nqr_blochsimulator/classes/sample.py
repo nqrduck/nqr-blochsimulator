@@ -18,7 +18,7 @@ class Sample:
         resonant_frequency : float,
         gamma : float,
         nuclear_spin : float,
-        spin_transition : int,
+        spin_factor : float,
         powder_factor : float,
         filling_factor : float,
         T1 : float,
@@ -46,13 +46,8 @@ class Sample:
                 The gamma value of the sample in MHz/T.
             nuclear_spin : float
                 The nuclear spin quantum number of the sample.
-            spin_transition: int
-                The spin transition of the sample.
-                0 is -1/2 -> 1/2
-                1 is 1/2 -> 3/2
-                2 is 3/2 -> 5/2
-                3 is 5/2 -> 7/2
-                4 is 7/2 -> 9/2
+            spin_factor : float
+                The spin transition factor of the sample.
             powder_factor : float
                 The powder factor of the sample.
             filling_factor : float
@@ -78,8 +73,7 @@ class Sample:
         self.resonant_frequency = resonant_frequency * 1e6
         self.gamma = gamma * 1e6
         self.nuclear_spin = nuclear_spin
-        self.spin_transition = spin_transition
-        self.spin_factor = self.calculate_spin_transition_factor(nuclear_spin, self.spin_transition)
+        self.spin_factor = spin_factor
         self.powder_factor = powder_factor
         self.filling_factor = filling_factor
         self.T1 = T1 * 1e-6
