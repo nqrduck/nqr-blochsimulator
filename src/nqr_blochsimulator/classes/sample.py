@@ -13,17 +13,18 @@ class Sample:
     def __init__(
         self,
         name : str,
-        density : float,
-        molar_mass : float,
+        atoms : float,
         resonant_frequency : float,
         gamma : float,
-        nuclear_spin : float,
+        nuclear_spin : str,
         spin_factor : float,
         powder_factor : float,
         filling_factor : float,
         T1 : float,
         T2 : float,
         T2_star : float,
+        density : float,
+        molar_mass : float,
         atom_density=None,
         sample_volume=None,
         sample_length=None,
@@ -36,16 +37,14 @@ class Sample:
         ----------
             name : str
                 The name of the sample.
-            density : float
-                The density of the sample (g/m^3 or kg/m^3).
-            molar_mass : float
-                The molar mass of the sample (g/mol or kg/mol).
+            atoms : float
+                The number of atoms in the sample.
             resonant_frequency : float
                 The resonant frequency of the sample in MHz.
             gamma : float
                 The gamma value of the sample in MHz/T.
-            nuclear_spin : float
-                The nuclear spin quantum number of the sample.
+            nuclear_spin : string
+                The nuclear spin quantum number of the sample. Can be half-integer spin.
             spin_factor : float
                 The spin transition factor of the sample.
             powder_factor : float
@@ -58,6 +57,10 @@ class Sample:
                 The spin-spin relaxation time of the sample in microseconds.
             T2_star : float
                 The effective spin-spin relaxation time of the sample in microseconds.
+            density : float
+                The density of the sample (g/m^3 or kg/m^3).
+            molar_mass : float
+                The molar mass of the sample (g/mol or kg/mol).
             atom_density : float, optional
                 The atom density of the sample (atoms per cm^3). By default None.
             sample_volume : float, optional
@@ -68,6 +71,7 @@ class Sample:
                 The diameter of the sample m(m). By default None.
         """
         self.name = name
+        self.atoms = atoms
         self.density = density
         self.molar_mass = molar_mass
         self.resonant_frequency = resonant_frequency * 1e6
@@ -83,7 +87,10 @@ class Sample:
         self.sample_volume = sample_volume
         self.sample_length = sample_length
         self.sample_diameter = sample_diameter
-        self.calculate_atoms()
+        if self.atoms == 0:
+            self.calculate_atoms()
+
+    # These are helper methods that are used to calculate different parameters of the sample.
 
     def calculate_atoms(self):
         """
@@ -102,6 +109,8 @@ class Sample:
             )
         else:
             self.atoms = self.avogadro * self.density / self.molar_mass
+
+        logger.debug(f"Number of atoms in the sample: {self.atoms}")
 
     def pauli_spin_matrices(self, spin):
         """

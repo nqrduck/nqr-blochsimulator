@@ -13,11 +13,12 @@ class TestSimulation(unittest.TestCase):
     def setUp(self):
         self.sample = Sample(
             "BiPh3",
+            atoms=0,
             density=1.585e6,  # g/m^3
             molar_mass=440.3,  # g/mol
             resonant_frequency=83.56e6,  # Hz
             gamma=43.42,  # MHz/T
-            nuclear_spin= 9 / 2,
+            nuclear_spin= "9/2",
             spin_factor=1.94
             powder_factor=0.75,
             filling_factor=0.7,

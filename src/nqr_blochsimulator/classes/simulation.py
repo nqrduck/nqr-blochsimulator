@@ -313,10 +313,13 @@ class Simulation:
         """
         u = 4 * np.pi * 1e-7  # permeability of free space
 
+        num, den = self.sample.nuclear_spin.split("/")
+        nuclear_spin = float(num) / float(den)
+
         magnetization = (
             (
                 (self.sample.gamma * 2 * self.sample.atoms)
-                / (2 * self.sample.nuclear_spin + 1)
+                / (2 * nuclear_spin + 1)
             )
             * (h**2 * self.sample.resonant_frequency)
             / (Boltzmann * self.temperature)
