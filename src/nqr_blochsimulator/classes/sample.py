@@ -38,7 +38,7 @@ class Sample:
             name : str
                 The name of the sample.
             atoms : float
-                The number of atoms in the sample.
+                The number of atoms per unit volume of the sample (1/m^3).
             resonant_frequency : float
                 The resonant frequency of the sample in MHz.
             gamma : float
@@ -94,7 +94,7 @@ class Sample:
 
     def calculate_atoms(self):
         """
-        Calculate the number of atoms in the sample per volume unit. This only works if the sample volume and atom density are provided.
+        Calculate the number of atoms in the sample per volume unit (1/m^3). This only works if the sample volume and atom density are provided.
         Also the sample should be cylindrical.
 
         If atom density and sample volume are provided, use these to calculate the number of atoms.

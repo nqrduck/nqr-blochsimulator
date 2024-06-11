@@ -19,7 +19,7 @@ class TestSimulation(unittest.TestCase):
             resonant_frequency=83.56e6,  # Hz
             gamma=43.42,  # MHz/T
             nuclear_spin= "9/2",
-            spin_factor=1.94
+            spin_factor=1.94,
             powder_factor=0.75,
             filling_factor=0.7,
             T1=83.5,  # µs
@@ -76,8 +76,8 @@ class TestSimulation(unittest.TestCase):
 
     def test_spin_factor_calculation(self):
 
-        spin = self.sample.nuclear_spin
-        transition = 1
+        spin = 2.5
+        transition = 2
 
         spin_factor = self.sample.calculate_spin_transition_factor(spin, transition)
         logger.info("Spin factor: " + str(spin_factor))

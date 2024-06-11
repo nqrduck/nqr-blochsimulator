@@ -278,6 +278,10 @@ class Simulation:
             * self.number_turns
             / self.length_coil
         )
+
+        # Spin Factor Scaling 
+        B1 = B1 * self.sample.spin_factor
+
         return B1
 
     def calc_xdis(self) -> np.array:
