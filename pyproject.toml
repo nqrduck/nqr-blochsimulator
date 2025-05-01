@@ -46,8 +46,8 @@ convention = "google"
 
 [project.urls]
 "Homepage" = "https://nqrduck.cool"
-"Bug Tracker" = "https://github.com/nqrduck/nqr-blochsimulator/issues"
-"Source Code" = "https://github.com/nqrduck/nqrduck-blochsimulator"
+"Bug Tracker" = "https://git.private.coffee/nqrduck/nqr-blochsimulator/issues"
+"Source Code" = "https://git.private.coffee/nqrduck/nqrduck-blochsimulator"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/nqr_blochsimulator"]
